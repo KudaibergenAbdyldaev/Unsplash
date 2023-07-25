@@ -1,16 +1,15 @@
 package com.example.unsplash.data.repository
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.map
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
-import androidx.paging.liveData
 import androidx.paging.map
 import com.example.unsplash.data.mapper.toDomainModel
 import com.example.unsplash.data.retrofit.ApiInterface
 import com.example.unsplash.domain.model.UnsplashPhoto
 import com.example.unsplash.domain.repository.GetPhotosRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class GetPhotosRepositoryImpl @Inject constructor(
@@ -21,7 +20,7 @@ class GetPhotosRepositoryImpl @Inject constructor(
         const val PAGE_SIZE = 10
     }
 
-    override fun getPhotos(): LiveData<PagingData<UnsplashPhoto>> {
+    override fun getPhotos(): Flow<PagingData<UnsplashPhoto>> {
         return Pager(
             config = PagingConfig(
                 pageSize = PAGE_SIZE,
@@ -29,6 +28,10 @@ class GetPhotosRepositoryImpl @Inject constructor(
                 enablePlaceholders = false
             ),
             pagingSourceFactory = { UnsplashPagingSource(apiInterface) },
-        ).liveData.map { it -> it.map { it.toDomainModel() } }
+        )
+            .flow
+            .map { pagingData ->
+                pagingData.map { it.toDomainModel() }
+            }
     }
 }
