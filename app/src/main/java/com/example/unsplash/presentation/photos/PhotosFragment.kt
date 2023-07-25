@@ -17,7 +17,9 @@ import com.example.unsplash.R
 import com.example.unsplash.databinding.FragmentPhotosBinding
 import com.example.unsplash.domain.model.UnsplashError
 import com.example.unsplash.presentation.adapter.LoaderStateAdapter
+import com.example.unsplash.presentation.adapter.OnClickListener
 import com.example.unsplash.presentation.adapter.PhotosAdapter
+import com.example.unsplash.presentation.detail.DetailFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -30,9 +32,7 @@ class PhotosFragment : Fragment() {
     private val binding: FragmentPhotosBinding
         get() = _binding ?: throw RuntimeException("FragmentPhotosBinding is null")
 
-    private val photosAdapter: PhotosAdapter by lazy {
-        PhotosAdapter()
-    }
+    private var photosAdapter: PhotosAdapter? = null
 
     private var connection = true
 
@@ -49,7 +49,6 @@ class PhotosFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setUpRecyclerView()
         setRecyclerViewData()
-//        openMovieDetail()
         checkNetworkConnection()
         setSwipeRefresh()
     }
@@ -57,7 +56,7 @@ class PhotosFragment : Fragment() {
     private fun checkNetworkConnection() {
         viewModel.connectionLiveData.observe(viewLifecycleOwner) {
             connection = it
-            if (it) photosAdapter.refresh()
+            if (it) photosAdapter?.refresh()
             else showNoInternConnection()
         }
     }
@@ -67,7 +66,7 @@ class PhotosFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 viewModel.photos.collectLatest {
-                    photosAdapter.submitData(viewLifecycleOwner.lifecycle, pagingData = it)
+                    photosAdapter?.submitData(viewLifecycleOwner.lifecycle, pagingData = it)
                 }
             }
         }
@@ -77,18 +76,22 @@ class PhotosFragment : Fragment() {
         val headerAdapter = LoaderStateAdapter()
         val footerAdapter = LoaderStateAdapter()
 
-        val concatAdapter = photosAdapter.withLoadStateHeaderAndFooter(
+        photosAdapter = PhotosAdapter(onClickListener = OnClickListener {
+            openPhotosDetail(it)
+        })
+        val concatAdapter = photosAdapter?.withLoadStateHeaderAndFooter(
             header = headerAdapter, footer = footerAdapter
         )
-        photosAdapter.addLoadStateListener { loadState ->
+        photosAdapter?.addLoadStateListener { loadState ->
             when {
 
-                loadState.refresh is LoadState.NotLoading && photosAdapter.itemCount == 0 -> {
+                loadState.refresh is LoadState.NotLoading && photosAdapter?.itemCount == 0 -> {
                     binding.recyclerView.isVisible = false
                     binding.tvMessage.isVisible = true
                 }
 
-                loadState.refresh is LoadState.NotLoading && photosAdapter.itemCount > 0 -> {
+                loadState.refresh is LoadState.NotLoading
+                        && (photosAdapter?.itemCount ?: 0) > 0 -> {
                     binding.recyclerView.isVisible = true
                     binding.tvMessage.isVisible = false
                 }
@@ -107,7 +110,7 @@ class PhotosFragment : Fragment() {
                     val error = loadState.refresh as LoadState.Error
                     initError(error.error)
 
-                    if (photosAdapter.itemCount == 0) {
+                    if (photosAdapter?.itemCount == 0) {
                         binding.recyclerView.isVisible = false
                         binding.tvMessage.isVisible = true
                     }
@@ -124,7 +127,9 @@ class PhotosFragment : Fragment() {
             override fun getSpanSize(position: Int): Int {
                 return if (position == 0 && headerAdapter.itemCount > 0) {
                     2
-                } else if (position == concatAdapter.itemCount - 1 && footerAdapter.itemCount > 0) {
+                } else if (position == (concatAdapter?.itemCount
+                        ?: 0) - 1 && footerAdapter.itemCount > 0
+                ) {
                     2
                 } else {
                     1
@@ -159,7 +164,7 @@ class PhotosFragment : Fragment() {
             is UnsplashError.ServerError -> {
                 MaterialAlertDialogBuilder(requireContext()).setTitle(getString(R.string.server_error))
                     .setPositiveButton(getString(R.string.ok)) { dialog, _ ->
-                        photosAdapter.refresh()
+                        photosAdapter?.refresh()
                         dialog.dismiss()
                     }.show()
             }
@@ -171,26 +176,24 @@ class PhotosFragment : Fragment() {
                             R.string.ok
                         )
                     ) { dialog, _ ->
-                        photosAdapter.refresh()
+                        photosAdapter?.refresh()
                         dialog.dismiss()
                     }.show()
             }
         }
     }
 
-    private fun openMovieDetail() {
-        photosAdapter.onPhotosItemClickListener = {
-            if (connection) {
-//                requireActivity().supportFragmentManager.beginTransaction()
-//                    .replace(
-//                        R.id.fragment_container,
-//                        DetailMovieFragment.newInstanceDetailMovieFragment(it)
-//                    )
-//                    .addToBackStack(null)
-//                    .commit()
-            } else {
-                showNoInternConnection()
-            }
+    private fun openPhotosDetail(url: String) {
+        if (connection) {
+            requireActivity().supportFragmentManager.beginTransaction()
+                .add(
+                    R.id.fragment_container,
+                    DetailFragment.newInstance(url)
+                )
+                .addToBackStack(null)
+                .commit()
+        } else {
+            showNoInternConnection()
         }
     }
 
@@ -213,11 +216,15 @@ class PhotosFragment : Fragment() {
     private fun setSwipeRefresh() {
         binding.swipeContainer.apply {
             setOnRefreshListener {
-                photosAdapter.refresh()
+                photosAdapter?.refresh()
                 isRefreshing = false
             }
         }
+    }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        _binding = null
     }
 
 }

@@ -7,15 +7,14 @@ import com.example.unsplash.R
 import com.example.unsplash.databinding.PhotosItemBinding
 import com.example.unsplash.domain.model.UnsplashPhoto
 
-class PhotosAdapter : PagingDataAdapter<UnsplashPhoto, PhotosViewHolder>(DiffUtilCallBack) {
+class PhotosAdapter(private val onClickListener: OnClickListener) : PagingDataAdapter<UnsplashPhoto, PhotosViewHolder>(DiffUtilCallBack) {
 
-    var onPhotosItemClickListener: ((String) -> Unit)? = null
 
     override fun onBindViewHolder(holderPhotos: PhotosViewHolder, position: Int) {
         holderPhotos.bind(getItem(position))
         holderPhotos.itemView.setOnClickListener {
-            getItem(position)?.id?.let {
-                onPhotosItemClickListener?.invoke(it)
+            getItem(position)?.urls?.full?.let {
+                onClickListener.onClick(it)
             }
         }
     }
