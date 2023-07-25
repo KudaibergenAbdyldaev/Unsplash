@@ -1,11 +1,10 @@
 package com.example.unsplash.presentation.photos
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -19,6 +18,7 @@ import com.example.unsplash.databinding.FragmentPhotosBinding
 import com.example.unsplash.domain.model.UnsplashError
 import com.example.unsplash.presentation.adapter.LoaderStateAdapter
 import com.example.unsplash.presentation.adapter.PhotosAdapter
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -39,8 +39,7 @@ class PhotosFragment : Fragment() {
     private val viewModel: PhotosViewModel by viewModels()
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = FragmentPhotosBinding.inflate(inflater, container, false)
         return binding.root
@@ -51,16 +50,15 @@ class PhotosFragment : Fragment() {
         setUpRecyclerView()
         setRecyclerViewData()
 //        openMovieDetail()
-//        checkNetworkConnection()
+        checkNetworkConnection()
+        setSwipeRefresh()
     }
 
     private fun checkNetworkConnection() {
         viewModel.connectionLiveData.observe(viewLifecycleOwner) {
             connection = it
-            if (it)
-                photosAdapter.refresh()
-            else
-                showNoInternConnection()
+            if (it) photosAdapter.refresh()
+            else showNoInternConnection()
         }
     }
 
@@ -80,11 +78,21 @@ class PhotosFragment : Fragment() {
         val footerAdapter = LoaderStateAdapter()
 
         val concatAdapter = photosAdapter.withLoadStateHeaderAndFooter(
-            header = headerAdapter,
-            footer = footerAdapter
+            header = headerAdapter, footer = footerAdapter
         )
         photosAdapter.addLoadStateListener { loadState ->
             when {
+
+                loadState.refresh is LoadState.NotLoading && photosAdapter.itemCount == 0 -> {
+                    binding.recyclerView.isVisible = false
+                    binding.tvMessage.isVisible = true
+                }
+
+                loadState.refresh is LoadState.NotLoading && photosAdapter.itemCount > 0 -> {
+                    binding.recyclerView.isVisible = true
+                    binding.tvMessage.isVisible = false
+                }
+
                 loadState.prepend is LoadState.Error -> {
                     val error = loadState.prepend as LoadState.Error
                     initError(error.error)
@@ -93,12 +101,16 @@ class PhotosFragment : Fragment() {
                 loadState.append is LoadState.Error -> {
                     val error = loadState.append as LoadState.Error
                     initError(error.error)
-
                 }
 
                 loadState.refresh is LoadState.Error -> {
                     val error = loadState.refresh as LoadState.Error
                     initError(error.error)
+
+                    if (photosAdapter.itemCount == 0) {
+                        binding.recyclerView.isVisible = false
+                        binding.tvMessage.isVisible = true
+                    }
                 }
             }
         }
@@ -125,32 +137,43 @@ class PhotosFragment : Fragment() {
     private fun initError(error: Throwable) {
         when (error) {
             is UnsplashError.NoInternetError -> {
-                Log.e("UnsplashError", "NoInternetError")
+                showNoInternConnection()
             }
 
             is UnsplashError.ForbiddenError -> {
-                Log.e("UnsplashError", "ForbiddenError")
+                error(error.error.errors)
             }
 
             is UnsplashError.UnauthorizedError -> {
-                Log.e("UnsplashError", error.error.errors.joinToString())
+                error(error.error.errors)
             }
 
             is UnsplashError.NotFoundError -> {
-                error.error.errors
-                Log.e("UnsplashError", "NotFoundError")
+                error(error.error.errors)
             }
 
             is UnsplashError.BadRequestError -> {
-                Log.e("UnsplashError", "BadRequestError")
+                error(error.error.errors)
             }
 
             is UnsplashError.ServerError -> {
-                Log.e("UnsplashError", "ServerError")
+                MaterialAlertDialogBuilder(requireContext()).setTitle(getString(R.string.server_error))
+                    .setPositiveButton(getString(R.string.ok)) { dialog, _ ->
+                        photosAdapter.refresh()
+                        dialog.dismiss()
+                    }.show()
             }
 
             is UnsplashError.UnknownError -> {
-                Log.e("UnsplashError", "UnknownError")
+                MaterialAlertDialogBuilder(requireContext()).setTitle(getString(R.string.unknown_error))
+                    .setPositiveButton(
+                        getString(
+                            R.string.ok
+                        )
+                    ) { dialog, _ ->
+                        photosAdapter.refresh()
+                        dialog.dismiss()
+                    }.show()
             }
         }
     }
@@ -172,11 +195,29 @@ class PhotosFragment : Fragment() {
     }
 
     private fun showNoInternConnection() {
-        Toast.makeText(
-            requireContext(),
-            getString(R.string.check_internet),
-            Toast.LENGTH_SHORT
-        ).show()
+        MaterialAlertDialogBuilder(requireContext()).setTitle(getString(R.string.error))
+            .setMessage(getString(R.string.noInternetConnection))
+            .setPositiveButton(getString(R.string.ok)) { dialog, _ ->
+                dialog.dismiss()
+            }.show()
+    }
+
+    private fun error(errors: List<String>? = emptyList()) {
+        MaterialAlertDialogBuilder(requireContext()).setTitle(getString(R.string.error))
+            .setMessage(errors?.joinToString())
+            .setPositiveButton(getText(R.string.ok)) { dialog, _ ->
+                dialog.dismiss()
+            }.show()
+    }
+
+    private fun setSwipeRefresh() {
+        binding.swipeContainer.apply {
+            setOnRefreshListener {
+                photosAdapter.refresh()
+                isRefreshing = false
+            }
+        }
+
     }
 
 }

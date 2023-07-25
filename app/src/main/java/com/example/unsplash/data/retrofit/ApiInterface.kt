@@ -8,7 +8,7 @@ import retrofit2.http.Query
 
 interface ApiInterface {
 
-//    @Headers("Authorization: Client-ID b0UeZo9kpS1qJzYwal_McQTVzF96VUEG-zyAuxeAL3I")
+    @Headers("Authorization: Client-ID b0UeZo9kpS1qJzYwal_McQTVzF96VUEG-zyAuxeAL3I")
     @GET("photos/")
     suspend fun getPhotos(
         @Query("page") page: Int

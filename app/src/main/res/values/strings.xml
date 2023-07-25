@@ -1,4 +1,10 @@
 <resources>
     <string name="app_name">Unsplash</string>
-    <string name="check_internet">Проверьте соединение с интернетом</string>
+    <string name="check_internet">Check internet connection</string>
+    <string name="ok">OK</string>
+    <string name="server_error">Server error</string>
+    <string name="unknown_error">Unknown error</string>
+    <string name="error">Error</string>
+    <string name="noInternetConnection">No internet connection</string>
+    <string name="no_data_found">No data found.</string>
 </resources>
