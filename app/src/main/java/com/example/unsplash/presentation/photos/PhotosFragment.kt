@@ -1,7 +1,6 @@
 package com.example.unsplash.presentation.photos
 
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -11,31 +10,31 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.unsplash.R
-import com.example.unsplash.databinding.FragmentPopularBinding
+import com.example.unsplash.databinding.FragmentPhotosBinding
 import com.example.unsplash.presentation.adapter.LoaderStateAdapter
-import com.example.unsplash.presentation.adapter.MovieAdapter
+import com.example.unsplash.presentation.adapter.PhotosAdapter
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class PopularFragment : Fragment() {
+class PhotosFragment : Fragment() {
 
-    private var _binding: FragmentPopularBinding? = null
-    private val binding: FragmentPopularBinding
-        get() = _binding ?: throw RuntimeException("FragmentPopularBinding is null")
+    private var _binding: FragmentPhotosBinding? = null
+    private val binding: FragmentPhotosBinding
+        get() = _binding ?: throw RuntimeException("FragmentPhotosBinding is null")
 
-    private val movieAdapter: MovieAdapter by lazy {
-        MovieAdapter()
+    private val photosAdapter: PhotosAdapter by lazy {
+        PhotosAdapter()
     }
 
     private var connection = true
 
-    private val viewModel: PopularViewModel by viewModels()
+    private val viewModel: PhotosViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentPopularBinding.inflate(inflater, container, false)
+        _binding = FragmentPhotosBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -51,7 +50,7 @@ class PopularFragment : Fragment() {
         viewModel.connectionLiveData.observe(viewLifecycleOwner) {
             connection = it
             if (it)
-                movieAdapter.refresh()
+                photosAdapter.refresh()
             else
                 showNoInternConnection()
         }
@@ -59,8 +58,8 @@ class PopularFragment : Fragment() {
 
 
     private fun setRecyclerViewData() {
-        viewModel.popularMovie.observe(viewLifecycleOwner) {
-            movieAdapter.submitData(viewLifecycleOwner.lifecycle, pagingData = it)
+        viewModel.photos.observe(viewLifecycleOwner) {
+            photosAdapter.submitData(viewLifecycleOwner.lifecycle, pagingData = it)
         }
 
     }
@@ -69,7 +68,7 @@ class PopularFragment : Fragment() {
         val headerAdapter = LoaderStateAdapter()
         val footerAdapter = LoaderStateAdapter()
 
-        val concatAdapter = movieAdapter.withLoadStateHeaderAndFooter(
+        val concatAdapter = photosAdapter.withLoadStateHeaderAndFooter(
             header = headerAdapter,
             footer = footerAdapter
         )
@@ -93,7 +92,7 @@ class PopularFragment : Fragment() {
     }
 
     private fun openMovieDetail() {
-        movieAdapter.onMovieItemClickListener = {
+        photosAdapter.onPhotosItemClickListener = {
             if (connection) {
 //                requireActivity().supportFragmentManager.beginTransaction()
 //                    .replace(

@@ -12,21 +12,21 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
-class PopularViewModel @Inject constructor(
-    private val getPopularUseCase: GetPhotosUseCase,
+class PhotosViewModel @Inject constructor(
+    private val getPhotosUseCase: GetPhotosUseCase,
     private val _connectionLiveData: ConnectionLiveData
 ) : ViewModel() {
 
     private val currentQuery = MutableLiveData(DEFAULT_QUERY)
 
-    val popularMovie = currentQuery.switchMap {
-        getPopularUseCase.getPhotos().cachedIn(viewModelScope)
+    val photos = currentQuery.switchMap {
+        getPhotosUseCase.getPhotos().cachedIn(viewModelScope)
     }
 
     val connectionLiveData: LiveData<Boolean> = _connectionLiveData
 
     companion object {
-        private const val DEFAULT_QUERY = "movie"
+        private const val DEFAULT_QUERY = "photos"
     }
 
 }

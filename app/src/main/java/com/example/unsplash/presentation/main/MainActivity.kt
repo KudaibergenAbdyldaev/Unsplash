@@ -4,7 +4,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.example.unsplash.R
 import com.example.unsplash.databinding.ActivityMainBinding
-import com.example.unsplash.presentation.photos.PopularFragment
+import com.example.unsplash.presentation.photos.PhotosFragment
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -20,7 +20,7 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState == null) {
             supportFragmentManager
                 .beginTransaction()
-                .replace(R.id.fragment_container, PopularFragment())
+                .replace(R.id.fragment_container, PhotosFragment())
                 .commit()
         }
 
