@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Unsplash</string>
+    <string name="check_internet">Проверьте соединение с интернетом</string>
 </resources>

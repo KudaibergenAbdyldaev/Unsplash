@@ -1,6 +1,52 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    ext {
+
+        targetAndroidSdk = 33
+        minAndroidSdk = 23
+
+        hiltVersion = "2.44"
+        navVersion = "2.4.0"
+
+        Libs = [
+                Android: [
+                        CoreKtx: "androidx.core:core-ktx:1.9.0",
+                        FragmentKtx: "androidx.fragment:fragment-ktx:1.5.5",
+                        ActivityKtx: "androidx.activity:activity-ktx:1.6.1",
+                        AppCompat: "androidx.appcompat:appcompat:1.6.0",
+                        LifecycleRuntimeKtx: "androidx.lifecycle:lifecycle-runtime-ktx:2.5.1",
+                        LifecycleViewModelKtx: "androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1",
+                        ConstraintLayout: "androidx.constraintlayout:constraintlayout:2.1.4",
+                        RecyclerView: "androidx.recyclerview:recyclerview:1.2.1",
+                        Paging: "androidx.paging:paging-runtime-ktx:3.1.1",
+                        Retrofit: "com.squareup.retrofit2:retrofit:2.9.0",
+                        KotlinxConverter: "com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0",
+                        Okhttp: "com.squareup.okhttp3:okhttp:4.9.1",
+                        Interceptor: "com.squareup.okhttp3:logging-interceptor:4.9.1",
+                        Urlconnection: "com.squareup.okhttp3:okhttp-urlconnection:4.9.0",
+                ],
+                Google: [
+                        Material: "com.google.android.material:material:1.7.0",
+                        Hilt: "com.google.dagger:hilt-android:$hiltVersion",
+                        HiltCompiler: "com.google.dagger:hilt-compiler:$hiltVersion"
+                ],
+                JetBrains: [
+                        CoroutinesCore: "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4",
+                        KotlinXSerialization: "org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.0",
+                ],
+                Testing: [
+                        JUnit: "junit:junit:4.13.2",
+                ],
+        ]
+    }
+}
+
 plugins {
     id 'com.android.application' version '8.0.2' apply false
     id 'com.android.library' version '8.0.2' apply false
     id 'org.jetbrains.kotlin.android' version '1.8.20' apply false
+    id 'org.jetbrains.kotlin.jvm' version '1.8.20' apply false
+    id 'com.google.dagger.hilt.android' version "$hiltVersion" apply false
+    id 'org.jetbrains.kotlin.plugin.serialization' version '1.8.21'
 }
